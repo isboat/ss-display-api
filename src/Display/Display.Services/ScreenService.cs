@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Display.Services
 {
-    public class ScreenService
+    public class ScreenService: IScreenService
     {
         private readonly IRepository<ScreenModel> _repository;
 
