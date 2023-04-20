@@ -3,7 +3,7 @@ using Display.Repositories;
 
 namespace Display.Services
 {
-    public interface IScreenService
+    public interface IContentService
     {
         Task<IEnumerable<ScreenModel>> GetScreensAsync(string tenantId);
 

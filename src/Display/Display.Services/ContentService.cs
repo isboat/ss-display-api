@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Display.Services
 {
-    public class ScreenService: IScreenService
+    public class ContentService: IContentService
     {
         private readonly IRepository<ScreenModel> _repository;
 
-        public ScreenService(IRepository<ScreenModel> repository)
+        public ContentService(IRepository<ScreenModel> repository)
         {
             _repository = repository;
         }
@@ -22,20 +22,22 @@ namespace Display.Services
 
         public async Task<ScreenDetailModel?> GetDetailsAsync(string tenantId, string id)
         {
-            ScreenDetailModel? screen = await _repository.GetAsync(tenantId, id) as ScreenDetailModel;
+            var screen = await _repository.GetAsync(tenantId, id);
             if (screen == null) return null;
 
-            if (!string.IsNullOrEmpty(screen.MenuEntityId))
+            var screenDetails = ScreenDetailModel.ToDetails(screen);
+
+            if (!string.IsNullOrEmpty(screenDetails.MenuEntityId))
             {
-                screen.Menu = GetMenuDetails(screen.MenuEntityId);
+                screenDetails.Menu = GetMenuDetails(screenDetails.MenuEntityId);
             }
 
-            if (!string.IsNullOrEmpty(screen.MediaAssetEntityId))
+            if (!string.IsNullOrEmpty(screenDetails.MediaAssetEntityId))
             {
-                screen.MediaAsset = GetMediaAssetDetails(screen.MediaAssetEntityId);
+                screenDetails.MediaAsset = GetMediaAssetDetails(screenDetails.MediaAssetEntityId);
             }
 
-            return screen;
+            return screenDetails;
         }
 
         private MenuModel? GetMenuDetails(string? itemId)
