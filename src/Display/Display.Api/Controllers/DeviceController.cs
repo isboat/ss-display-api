@@ -11,9 +11,9 @@ namespace Display.Api.Controllers
     [ApiController]
     public class DeviceController : ControllerBase
     {
-        private readonly IDeviceService _deviceService;
+        private readonly IDeviceAuthenticationService _deviceService;
 
-        public DeviceController(IDeviceService deviceService)
+        public DeviceController(IDeviceAuthenticationService deviceService)
         {
             this._deviceService = deviceService;
         }

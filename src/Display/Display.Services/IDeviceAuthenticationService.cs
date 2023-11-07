@@ -4,7 +4,7 @@ namespace Display.Services
 {
     // https://developers.google.com/identity/protocols/oauth2/limited-input-device
 
-    public interface IDeviceService
+    public interface IDeviceAuthenticationService
     {
         Task<DeviceCodeModel?> GetDeviceCode();
 

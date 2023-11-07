@@ -2,17 +2,18 @@
 using Display.Shared.Exceptions;
 using Display.Repositories;
 using Display.Shared;
+using Display.Shared.Constants;
 
 namespace Display.Services
 {
     // https://developers.google.com/identity/protocols/oauth2/limited-input-device
-    public class DeviceService : IDeviceService
+    public class DeviceAuthenticationService : IDeviceAuthenticationService
     {
         private readonly IDeviceRegistrationRepository _repository;
         private readonly IJwtService _jwtService;
         private readonly IDateTimeProvider _dateTimeProvider;
 
-        public DeviceService(IDeviceRegistrationRepository repository, IJwtService jwtService, IDateTimeProvider dateTimeProvider)
+        public DeviceAuthenticationService(IDeviceRegistrationRepository repository, IJwtService jwtService, IDateTimeProvider dateTimeProvider)
         {
             _repository = repository;
             _jwtService = jwtService;
@@ -23,11 +24,12 @@ namespace Display.Services
         {
             var model =new DeviceCodeModel
             {
-                DeviceCode = $"{Guid.NewGuid().ToString("N")}/{Guid.NewGuid().ToString("N")}",
+                DeviceCode = $"{Guid.NewGuid():N}/{Guid.NewGuid():N}",
                 UserCode = GenerateUserCode(),
-                ExpiresIn = 1800,
+                ExpiresIn = 1800, // seconds
                 Interval = 5,
-                VerificationUrl = "https://www.isboatscreens.com/device"
+                VerificationUrl = "https://www.isboatscreens.com/device/auth",
+                DeviceName = GenerateDeviceName()
             };
 
             var registrationModel = new DeviceCodeRegistrationModel
@@ -37,12 +39,19 @@ namespace Display.Services
                 UserCode = model.UserCode,
                 ExpiresIn = model.ExpiresIn,
                 Interval = model.Interval,
-                Id = Guid.NewGuid().ToString("N")
+                Id = Guid.NewGuid().ToString("N"),
+                DeviceName = model.DeviceName,
             };
 
             var res = await _repository.InsertAsync(registrationModel); 
 
             return res ? model : null;
+        }
+
+        private static string GenerateDeviceName()
+        {
+            var rnd = new Random();
+            return $"device-name-{rnd.Next()}";
         }
 
         public async Task<AccessPermission?> GetAccessToken(TokenRequest codeStatusRequest)
@@ -91,8 +100,12 @@ namespace Display.Services
             {
                 // Refresh token is expired
                 // log ex
-                throw new RefreshTokenInvalidException();
+                throw new InvalidRefreshTokenException();
             }
+
+            var token = _jwtService.ReadToken(refreshToken) ?? throw new InvalidRefreshTokenException();
+            var scopeClaim =  token.Claims.FirstOrDefault(x => x.Type.Equals("scope", StringComparison.OrdinalIgnoreCase));
+            if (scopeClaim == null || scopeClaim.Value != "refresh_token") throw new InvalidRefreshTokenException();
 
             var model = await _repository.GetAsync(codeStatusRequest.DeviceCode);
 
@@ -105,7 +118,7 @@ namespace Display.Services
             return access;
         }
         
-        private string GenerateUserCode()
+        private static string GenerateUserCode()
         {
             var splits = Guid.NewGuid().ToString("D").Split('-');
 
@@ -128,19 +141,27 @@ namespace Display.Services
             {
                 TokenType = "Bearer",
                 ExpiresIn = ConvertToSeconds(tokenExpiration),
-                Scope = "tenant.content"
+                Scope = TenantAuthorization.RequiredScope
             };
             var tokenData = new Dictionary<string, string>
             {
                 {"tenantid",model.TenantId! },
                 {"devicecode",model.DeviceCode! },
+                {"deviceid",model.Id! },
+                {"devicename",model.DeviceName! },
                 {"scope",access.Scope! }
             };
 
             var accessToken = _jwtService.GenerateToken(tokenData, tokenExpiration);
             access.AccessToken = accessToken;
 
-            var refreshToken = _jwtService.GenerateToken(tokenData, _dateTimeProvider.UtcNow!.Value.AddYears(1));
+            var refreshTokenData = new Dictionary<string, string>
+            {
+                {"devicecode",model.DeviceCode! },
+                {"scope","refresh_token" }
+            };
+
+            var refreshToken = _jwtService.GenerateToken(refreshTokenData, _dateTimeProvider.UtcNow!.Value.AddYears(1));
             access.RefreshToken = refreshToken;
             return access;
         }

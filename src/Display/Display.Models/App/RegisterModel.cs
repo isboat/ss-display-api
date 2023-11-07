@@ -19,6 +19,8 @@ namespace Display.Models.App
         public string? UserCode { get; set; }
         public int? ExpiresIn { get; set; }
         public int? Interval { get; set; }
+        public string? DeviceName { get; set; }
+        public string? ScreenId { get; set; }
     }
 
     public class DeviceCodeModel
@@ -37,6 +39,9 @@ namespace Display.Models.App
 
         [JsonProperty("interval")]
         public int? Interval { get; set; }
+
+        [JsonProperty("device_name")]
+        public string? DeviceName { get; set; }
     }
 
     public class TokenRequest

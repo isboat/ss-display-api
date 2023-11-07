@@ -1,4 +1,5 @@
 ﻿using Display.Models;
+using Display.Models.App;
 using Display.Repositories;
 using System;
 using System.Collections.Generic;
@@ -11,10 +12,12 @@ namespace Display.Services
     public class ContentService: IContentService
     {
         private readonly IRepository<ScreenModel> _repository;
+        private  readonly IDeviceRegistrationRepository _deviceRegistrationRepository;
 
-        public ContentService(IRepository<ScreenModel> repository)
+        public ContentService(IRepository<ScreenModel> repository, IDeviceRegistrationRepository deviceRegistrationRepository)
         {
             _repository = repository;
+            _deviceRegistrationRepository = deviceRegistrationRepository;
         }
 
         public async Task<IEnumerable<ScreenModel>> GetScreensAsync(string tenantId) =>
@@ -39,6 +42,9 @@ namespace Display.Services
 
             return screenDetails;
         }
+
+        public Task<DeviceCodeRegistrationModel?> GetDeviceAsync(string id) =>
+            _deviceRegistrationRepository.GetAsyncById(id);
 
         private MenuModel? GetMenuDetails(string? itemId)
         {

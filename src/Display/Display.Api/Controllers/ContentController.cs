@@ -1,7 +1,10 @@
-﻿using Display.Models.Exceptions;
+﻿using Display.Shared.Exceptions;
 using Display.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web.Resource;
+using Display.Shared.Constants;
+using Display.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -9,14 +12,39 @@ namespace Display.Api.Controllers
 {
     [Route("api/content")]
     [ApiController]
-    [Authorize] 
+    [Authorize(Policy = TenantAuthorization.RequiredPolicy)] 
     public class ContentController : ControllerBase
     {
-        private readonly IContentService _screenService;
+        private readonly IContentService _contentService;
 
         public ContentController(IContentService screenService)
         {
-            _screenService = screenService;
+            _contentService = screenService;
+        }
+
+        [HttpGet("data")]
+        public async Task<ActionResult> GetData()
+        {
+            var tenantId = GetRequestTenantId();
+            var deviceid = GetRequestDeviceId();
+
+            if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(deviceid))
+            {
+                return BadRequest();
+            }
+            var device = await _contentService.GetDeviceAsync(deviceid);
+            if (device == null)
+            {
+                return new NotFoundObjectResult("no such device");
+            }
+
+            var screen = await _contentService.GetDetailsAsync(tenantId, device.ScreenId);
+            if (screen == null)
+            {
+                return NotFound();
+            }
+
+            return new OkObjectResult(screen);
         }
 
         private string GetRequestTenantId()
@@ -30,42 +58,15 @@ namespace Display.Api.Controllers
             return tenantClaim.Value;
         }
 
-        [HttpGet("screens")]
-        public async Task<ActionResult> GetAll()
+        private string GetRequestDeviceId()
         {
-            var tenantId = GetRequestTenantId();
-
-            if (string.IsNullOrEmpty(tenantId))
+            var tenantClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.Equals("deviceid", StringComparison.OrdinalIgnoreCase));
+            if (tenantClaim == null)
             {
-                return BadRequest();
+                throw new InvalidTenantException();
             }
 
-            var screens = await _screenService.GetScreensAsync(tenantId);
-            if (screens == null || !screens.Any())
-            {
-                return NotFound();
-            }
-
-            return new OkObjectResult(screens);
-        }
-
-        [HttpGet("screens/{id}")]
-        public async Task<ActionResult> Get(string id)
-        {
-            var tenantId = GetRequestTenantId();
-
-            if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(id))
-            {
-                return BadRequest();
-            }
-
-            var screen = await _screenService.GetDetailsAsync(tenantId, id);
-            if (screen == null)
-            {
-                return NotFound();
-            }
-
-            return new OkObjectResult(screen);
+            return tenantClaim.Value;
         }
     }
 }
