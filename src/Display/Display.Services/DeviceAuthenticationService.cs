@@ -68,7 +68,7 @@ namespace Display.Services
                 throw new AccessForbiddenException();
             }
 
-            if(IsExpired(model))
+            if(IsExpired(model) && !IsApproved(model))
             {
                 // rate_limit_exceeded
                 throw new AccessExpiredException();
@@ -146,8 +146,8 @@ namespace Display.Services
             var tokenData = new Dictionary<string, string>
             {
                 {"tenantid",model.TenantId! },
+                {"deviceId",model.Id! },
                 {"devicecode",model.DeviceCode! },
-                {"deviceid",model.Id! },
                 {"devicename",model.DeviceName! },
                 {"scope",access.Scope! }
             };

@@ -15,6 +15,7 @@
             details.MediaAssetEntityId = screen.MediaAssetEntityId;
             details.TemplateKey = screen.TemplateKey;
             details.TemplateProperties = screen.TemplateProperties;
+            details.ExternalMediaSource = screen.ExternalMediaSource;
 
             return details;
         }

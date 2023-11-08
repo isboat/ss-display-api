@@ -48,12 +48,14 @@ namespace Display.Services
 
         private MenuModel? GetMenuDetails(string? itemId)
         {
-            throw new NotImplementedException();
+            return null;
+            //throw new NotImplementedException();
         }
 
         private AssetItemModel? GetMediaAssetDetails(string? itemId)
         {
-            throw new NotImplementedException();
+            return null;
+            //throw new NotImplementedException();
         }
     }
 }

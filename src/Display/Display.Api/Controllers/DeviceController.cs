@@ -39,20 +39,22 @@ namespace Display.Api.Controllers
             }
 
             AccessPermission? response;
-            if (codeStatusRequest.GrantType != "refresh_token")
+            switch(codeStatusRequest.GrantType)
             {
-                response = await _deviceService.GetAccessToken(codeStatusRequest);
-            }
-            else
-            {
-                var bearerExist = Request.Headers.TryGetValue(HeaderNames.Authorization, out var auth);
-                if (!bearerExist || string.IsNullOrEmpty(auth))
-                {
-                    return BadRequest();
-                }
+                case "access_token":
+                    response = await _deviceService.GetAccessToken(codeStatusRequest);
+                    break;
+                case "refresh_token":
+                    var bearerExist = Request.Headers.TryGetValue(HeaderNames.Authorization, out var auth);
+                    if (!bearerExist || string.IsNullOrEmpty(auth))
+                    {
+                        return BadRequest();
+                    }
 
-                var refreshToken = auth.ToString().Replace("Bearer ", "");
-                response = await _deviceService.RefreshToken(codeStatusRequest, refreshToken);
+                    var refreshToken = auth.ToString().Replace("Bearer ", "");
+                    response = await _deviceService.RefreshToken(codeStatusRequest, refreshToken);
+                    break;
+                default: return BadRequest();
             }
 
             if (response == null)

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web.Resource;
 using Display.Shared.Constants;
 using Display.Models;
+using System.Security.Claims;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -60,10 +61,10 @@ namespace Display.Api.Controllers
 
         private string GetRequestDeviceId()
         {
-            var tenantClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.Equals("deviceid", StringComparison.OrdinalIgnoreCase));
+            var tenantClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.Equals("deviceId", StringComparison.OrdinalIgnoreCase));
             if (tenantClaim == null)
             {
-                throw new InvalidTenantException();
+                throw new InvalidDeviceIdException();
             }
 
             return tenantClaim.Value;
