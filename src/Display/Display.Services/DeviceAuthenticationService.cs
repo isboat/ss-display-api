@@ -20,7 +20,7 @@ namespace Display.Services
             _dateTimeProvider = dateTimeProvider;
         }
 
-        public async Task<DeviceCodeModel?> GetDeviceCode()
+        public async Task<DeviceCodeModel?> GetDeviceCode(CodeRequest codeRequest)
         {
             var model =new DeviceCodeModel
             {
@@ -29,7 +29,8 @@ namespace Display.Services
                 ExpiresIn = 1800, // seconds
                 Interval = 5,
                 VerificationUrl = "https://www.isboatscreens.com/device/auth",
-                DeviceName = GenerateDeviceName()
+                DeviceName = GenerateDeviceName(),
+                ClientId = codeRequest.ClientId,
             };
 
             var registrationModel = new DeviceCodeRegistrationModel

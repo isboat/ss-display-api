@@ -19,9 +19,9 @@ namespace Display.Api.Controllers
         }
 
         [HttpPost("code")]
-        public async Task<IActionResult> GetDeviceCode()
+        public async Task<IActionResult> GetDeviceCode(CodeRequest codeRequest)
         {
-            var response = await _deviceService.GetDeviceCode();
+            var response = await _deviceService.GetDeviceCode(codeRequest);
             if (response == null)
             {
                 return NotFound();
@@ -41,7 +41,7 @@ namespace Display.Api.Controllers
             AccessPermission? response;
             switch(codeStatusRequest.GrantType)
             {
-                case "access_token":
+                case "urn:ietf:params:oauth:grant-type:device_code":
                     response = await _deviceService.GetAccessToken(codeStatusRequest);
                     break;
                 case "refresh_token":

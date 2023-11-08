@@ -42,6 +42,17 @@ namespace Display.Models.App
 
         [JsonProperty("device_name")]
         public string? DeviceName { get; set; }
+        public string? ClientId { get; set; }
+    }
+
+    public class CodeRequest
+    {
+        [JsonProperty("client_id")]
+        public string? ClientId { get; set; }
+
+
+        [JsonProperty("grant_type")]
+        public string? GrantType { get; set; }
     }
 
     public class TokenRequest

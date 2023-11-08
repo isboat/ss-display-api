@@ -6,7 +6,7 @@ namespace Display.Services
 
     public interface IDeviceAuthenticationService
     {
-        Task<DeviceCodeModel?> GetDeviceCode();
+        Task<DeviceCodeModel?> GetDeviceCode(CodeRequest codeRequest);
 
         Task<AccessPermission?> GetAccessToken(TokenRequest codeStatusRequest);
         Task<AccessPermission?> RefreshToken(TokenRequest codeStatusRequest, string refreshToken);
