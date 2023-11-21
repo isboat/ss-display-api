@@ -25,7 +25,7 @@ namespace Display.Api
             builder.Services.AddSingleton<IContentService, ContentService>();
             builder.Services.AddSingleton<IDeviceAuthenticationService, DeviceAuthenticationService>();
             builder.Services.AddSingleton<IDeviceRegistrationRepository, DeviceRegistrationRepository>();
-            builder.Services.AddSingleton<IRepository<ScreenModel>, ScreenRepository>();
+            builder.Services.AddSingleton<IRepository<DetailedScreenModel>, ScreenRepository>();
             builder.Services.AddSingleton<IJwtService, JwtService>();
             builder.Services.AddSingleton<IDateTimeProvider, SystemDatetimeProvider>();
 

@@ -11,26 +11,19 @@ namespace Display.Services
 {
     public class ContentService: IContentService
     {
-        private readonly IRepository<ScreenModel> _repository;
+        private readonly IRepository<DetailedScreenModel> _repository;
         private  readonly IDeviceRegistrationRepository _deviceRegistrationRepository;
 
-        public ContentService(IRepository<ScreenModel> repository, IDeviceRegistrationRepository deviceRegistrationRepository)
+        public ContentService(IRepository<DetailedScreenModel> repository, IDeviceRegistrationRepository deviceRegistrationRepository)
         {
             _repository = repository;
             _deviceRegistrationRepository = deviceRegistrationRepository;
         }
 
-        public async Task<IEnumerable<ScreenModel>> GetScreensAsync(string tenantId) =>
-            await _repository.GetAllByTenantIdAsync(tenantId);
-
         public async Task<DetailedScreenModel?> GetDetailsAsync(string tenantId, string id)
         {
             var screen = await _repository.GetAsync(tenantId, id);
-            if (screen == null) return null;
-
-            var screenDetails = DetailedScreenModel.ToDetails(screen);
-
-            return screenDetails;
+            return screen;
         }
 
         public Task<DeviceCodeRegistrationModel?> GetDeviceAsync(string id) =>

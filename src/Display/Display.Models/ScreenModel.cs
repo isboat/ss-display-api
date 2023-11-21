@@ -1,8 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-
-namespace Display.Models
+﻿namespace Display.Models
 {
-    [BsonIgnoreExtraElements]
     public class ScreenModel
     {
         public string? Id { get; set; }

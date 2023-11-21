@@ -4,10 +4,10 @@ using MongoDB.Driver;
 
 namespace Display.Repositories
 {
-    public class ScreenRepository : IRepository<ScreenModel>
+    public class ScreenRepository : IRepository<DetailedScreenModel>
     {
         private readonly MongoClient _client;
-        private readonly string CollectionName = "Screens";
+        private readonly string CollectionName = "PublishedScreenData";
 
         public ScreenRepository(IOptions<MongoSettings> settings)
         {
@@ -15,18 +15,13 @@ namespace Display.Repositories
             settings.Value.ConnectionString);
         }
 
-        private IMongoCollection<ScreenModel> GetTenantScreenCollection(string tenantId)
+        private IMongoCollection<DetailedScreenModel> GetTenantScreenCollection(string tenantId)
         {
             var database = _client.GetDatabase(tenantId);
-            return database.GetCollection<ScreenModel>(CollectionName);
+            return database.GetCollection<DetailedScreenModel>(CollectionName);
         }
 
-        public async Task<List<ScreenModel>> GetAllByTenantIdAsync(string tenantId)
-        {
-            return await GetTenantScreenCollection(tenantId).Find(x => x.TenantId == tenantId).ToListAsync();
-        }
-
-        public async Task<ScreenModel?> GetAsync(string tenantId, string id)
+        public async Task<DetailedScreenModel?> GetAsync(string tenantId, string id)
         {
             return await GetTenantScreenCollection(tenantId).Find(x => x.Id == id && x.TenantId == tenantId).FirstOrDefaultAsync();
         }

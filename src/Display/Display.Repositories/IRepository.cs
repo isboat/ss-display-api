@@ -8,8 +8,6 @@ namespace Display.Repositories
 {
     public interface IRepository<T>
     {
-        Task<List<T>> GetAllByTenantIdAsync(string tenantId);
-
         Task<T?> GetAsync(string tenantId, string id);
     }
 }
