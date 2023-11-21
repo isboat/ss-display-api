@@ -1,5 +1,8 @@
-﻿namespace Display.Models
+﻿using MongoDB.Bson.Serialization.Attributes;
+
+namespace Display.Models
 {
+    [BsonIgnoreExtraElements]
     public class MenuModel : IModelItem
     {
         public string? Id { get; set; }

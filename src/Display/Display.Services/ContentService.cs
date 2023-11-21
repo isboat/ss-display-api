@@ -23,39 +23,17 @@ namespace Display.Services
         public async Task<IEnumerable<ScreenModel>> GetScreensAsync(string tenantId) =>
             await _repository.GetAllByTenantIdAsync(tenantId);
 
-        public async Task<ScreenDetailModel?> GetDetailsAsync(string tenantId, string id)
+        public async Task<DetailedScreenModel?> GetDetailsAsync(string tenantId, string id)
         {
             var screen = await _repository.GetAsync(tenantId, id);
             if (screen == null) return null;
 
-            var screenDetails = ScreenDetailModel.ToDetails(screen);
-
-            if (!string.IsNullOrEmpty(screenDetails.MenuEntityId))
-            {
-                screenDetails.Menu = GetMenuDetails(screenDetails.MenuEntityId);
-            }
-
-            if (!string.IsNullOrEmpty(screenDetails.MediaAssetEntityId))
-            {
-                screenDetails.MediaAsset = GetMediaAssetDetails(screenDetails.MediaAssetEntityId);
-            }
+            var screenDetails = DetailedScreenModel.ToDetails(screen);
 
             return screenDetails;
         }
 
         public Task<DeviceCodeRegistrationModel?> GetDeviceAsync(string id) =>
             _deviceRegistrationRepository.GetAsyncById(id);
-
-        private MenuModel? GetMenuDetails(string? itemId)
-        {
-            return null;
-            //throw new NotImplementedException();
-        }
-
-        private AssetItemModel? GetMediaAssetDetails(string? itemId)
-        {
-            return null;
-            //throw new NotImplementedException();
-        }
     }
 }

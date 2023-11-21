@@ -38,6 +38,10 @@ namespace Display.Api.Controllers
             {
                 return new NotFoundObjectResult("no such device");
             }
+            if (string.IsNullOrEmpty(device.ScreenId))
+            {
+                return new NotFoundObjectResult("no screen id is null");
+            }
 
             var screen = await _contentService.GetDetailsAsync(tenantId, device.ScreenId);
             if (screen == null)

@@ -8,7 +8,7 @@ namespace Display.Services
     {
         Task<IEnumerable<ScreenModel>> GetScreensAsync(string tenantId);
 
-        Task<ScreenDetailModel?> GetDetailsAsync(string tenantId, string id);
+        Task<DetailedScreenModel?> GetDetailsAsync(string tenantId, string id);
 
         Task<DeviceCodeRegistrationModel?> GetDeviceAsync(string id);
     }

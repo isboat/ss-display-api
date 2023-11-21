@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
 namespace Display.Models
 {
+    [BsonIgnoreExtraElements]
     public class ScreenModel
     {
         public string? Id { get; set; }
@@ -18,10 +15,17 @@ namespace Display.Models
 
         public string? MediaAssetEntityId { get; set; }
 
+        public LayoutModel? Layout { get; set; }
+
+        public string? ExternalMediaSource { get; set; }
+    }
+
+    public class LayoutModel
+    {
         public string? TemplateKey { get; set; }
 
         public IEnumerable<TemplatePropertyModel>? TemplateProperties { get; set; }
 
-        public string? ExternalMediaSource { get; set; }
+        public string? MenuSubType { get; set; }
     }
 }
