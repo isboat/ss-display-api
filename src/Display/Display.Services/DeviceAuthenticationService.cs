@@ -87,12 +87,6 @@ namespace Display.Services
 
         public async Task<AccessPermission?> RefreshToken(TokenRequest codeStatusRequest, string refreshToken)
         {
-
-            if (string.IsNullOrEmpty(codeStatusRequest?.DeviceCode))
-            {
-                throw new InvalidDevicecodeException();
-            }
-
             try
             {
                 _jwtService.ValidateToken(refreshToken);
@@ -108,13 +102,10 @@ namespace Display.Services
             var scopeClaim =  token.Claims.FirstOrDefault(x => x.Type.Equals("scope", StringComparison.OrdinalIgnoreCase));
             if (scopeClaim == null || scopeClaim.Value != "refresh_token") throw new InvalidRefreshTokenException();
 
-            var model = await _repository.GetAsync(codeStatusRequest.DeviceCode);
+            var deviceCodeClaim = token.Claims.FirstOrDefault(x => x.Type.Equals("devicecode", StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrEmpty(deviceCodeClaim?.Value)) throw new InvalidRefreshTokenException();
 
-            if (model == null)
-            {
-                throw new AccessForbiddenException();
-            }
-
+            var model = await _repository.GetAsync(deviceCodeClaim.Value) ?? throw new AccessForbiddenException();
             var access = GenerateAccessPermission(model);
             return access;
         }

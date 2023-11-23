@@ -15,7 +15,7 @@ namespace Display.Api.Controllers
 
         public DeviceController(IDeviceAuthenticationService deviceService)
         {
-            this._deviceService = deviceService;
+            _deviceService = deviceService;
         }
 
         [HttpPost("code")]
@@ -41,9 +41,10 @@ namespace Display.Api.Controllers
             AccessPermission? response;
             switch(codeStatusRequest.GrantType)
             {
-                case "urn:ietf:params:oauth:grant-type:device_code":
+                case "urn:ietf:params:oauth:grant-type:access_token":
                     response = await _deviceService.GetAccessToken(codeStatusRequest);
                     break;
+
                 case "refresh_token":
                     var bearerExist = Request.Headers.TryGetValue(HeaderNames.Authorization, out var auth);
                     if (!bearerExist || string.IsNullOrEmpty(auth))
@@ -54,6 +55,7 @@ namespace Display.Api.Controllers
                     var refreshToken = auth.ToString().Replace("Bearer ", "");
                     response = await _deviceService.RefreshToken(codeStatusRequest, refreshToken);
                     break;
+
                 default: return BadRequest();
             }
 

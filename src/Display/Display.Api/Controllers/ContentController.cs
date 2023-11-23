@@ -33,20 +33,22 @@ namespace Display.Api.Controllers
             {
                 return BadRequest();
             }
-            var device = await _contentService.GetDeviceAsync(deviceid);
+            
+            var device = await _contentService.GetDeviceAsync(deviceid);            
             if (device == null)
             {
-                return new NotFoundObjectResult("no such device");
+                return new NotFoundObjectResult("no_such_device");
             }
+
             if (string.IsNullOrEmpty(device.ScreenId))
             {
-                return new NotFoundObjectResult("no screen id is null");
+                return new NotFoundObjectResult("no_screen_id");
             }
 
             var screen = await _contentService.GetDetailsAsync(tenantId, device.ScreenId);
             if (screen == null)
             {
-                return NotFound();
+                return new NotFoundObjectResult("no_screen_data_found");
             }
 
             return new OkObjectResult(screen);
@@ -55,23 +57,13 @@ namespace Display.Api.Controllers
         private string GetRequestTenantId()
         {
             var tenantClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.Equals("tenantid", StringComparison.OrdinalIgnoreCase));
-            if (tenantClaim == null)
-            {
-                throw new InvalidTenantException();
-            }
-
-            return tenantClaim.Value;
+            return tenantClaim == null ? throw new InvalidTenantException() : tenantClaim.Value;
         }
 
         private string GetRequestDeviceId()
         {
             var tenantClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.Equals("deviceId", StringComparison.OrdinalIgnoreCase));
-            if (tenantClaim == null)
-            {
-                throw new InvalidDeviceIdException();
-            }
-
-            return tenantClaim.Value;
+            return tenantClaim == null ? throw new InvalidDeviceIdException() : tenantClaim.Value;
         }
     }
 }
