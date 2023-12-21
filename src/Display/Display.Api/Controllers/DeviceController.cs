@@ -21,6 +21,10 @@ namespace Display.Api.Controllers
         [HttpPost("code")]
         public async Task<IActionResult> GetDeviceCode(CodeRequest codeRequest)
         {
+            if (codeRequest?.GrantType != "user_code")
+            {
+                return BadRequest("invalid_granttype");
+            }
             var response = await _deviceService.GetDeviceCode(codeRequest);
             if (response == null)
             {

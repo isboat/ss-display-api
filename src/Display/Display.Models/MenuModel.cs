@@ -2,7 +2,6 @@
 
 namespace Display.Models
 {
-    [BsonIgnoreExtraElements]
     public class MenuModel : IModelItem
     {
         public string? Id { get; set; }
@@ -14,6 +13,10 @@ namespace Display.Models
         public string? Description { get; set; }
 
         public string? Title { get; set; }
+
+        public string? Currency { get; set; }
+
+        public string? IconUrl { get; set; }
 
         public IEnumerable<MenuItem>? MenuItems { get; set; }
     }
@@ -28,8 +31,8 @@ namespace Display.Models
 
         public string? IconUrl { get; set; }
 
-        public string? Title { get; set; }
+        public string? Price { get; set; }
 
-        public decimal? Price { get; set; }
+        public string? DiscountPrice { get; set; }
     }
 }
