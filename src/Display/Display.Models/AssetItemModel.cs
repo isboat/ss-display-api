@@ -15,6 +15,8 @@ namespace Display.Models
 
         public string? AssetUrl { get; set; }
 
+        public string? FileName { get; set; }
+
         public AssetType? Type { get; set; }
     }
 
