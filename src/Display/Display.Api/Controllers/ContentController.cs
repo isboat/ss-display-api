@@ -12,7 +12,7 @@ namespace Display.Api.Controllers
     [Route("api/content")]
     [ApiController]
     [Authorize(Policy = TenantAuthorization.RequiredPolicy)] 
-    public class ContentController : ControllerBase
+    public class ContentController : CustomBaseController
     {
         private readonly IContentService _contentService;
 
@@ -50,18 +50,6 @@ namespace Display.Api.Controllers
             }
 
             return new OkObjectResult(screen);
-        }
-
-        private string GetRequestTenantId()
-        {
-            var tenantClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.Equals("tenantid", StringComparison.OrdinalIgnoreCase));
-            return tenantClaim == null ? throw new InvalidTenantException() : tenantClaim.Value;
-        }
-
-        private string GetRequestDeviceId()
-        {
-            var tenantClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.Equals("deviceId", StringComparison.OrdinalIgnoreCase));
-            return tenantClaim == null ? throw new InvalidDeviceIdException() : tenantClaim.Value;
         }
     }
 }

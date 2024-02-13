@@ -3,6 +3,7 @@ using Display.Shared.Exceptions;
 using Display.Repositories;
 using Display.Shared;
 using Display.Shared.Constants;
+using Display.Models.ViewModels;
 
 namespace Display.Services
 {
@@ -15,10 +16,15 @@ namespace Display.Services
             _repository = repository;
         }
 
-        public async Task<string?> GetDeviceName(string id)
+        public async Task<DeviceViewModel?> GetDevice(string id)
         {
             var device = await _repository.GetAsyncById(id);
-            return device?.DeviceName;
+            return device == null ? null : new DeviceViewModel
+            {
+                DeviceName = device.DeviceName,
+                Id = device.Id,
+                TenantId = device.TenantId
+            };
         }
     }
 }

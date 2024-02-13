@@ -8,8 +8,8 @@ namespace Display.Api.Controllers
 {
     [Route("api/signalr")]
     [ApiController]
-    //[Authorize(Policy = TenantAuthorization.RequiredPolicy)]
-    public class SignalRController : ControllerBase
+    [Authorize(Policy = TenantAuthorization.RequiredPolicy)]
+    public class SignalRController : CustomBaseController
     {
         private readonly ServiceHubContext _messageHubContext;
 
@@ -42,7 +42,7 @@ namespace Display.Api.Controllers
         [HttpPost("signalr/add-to-group")]
         public async Task<IActionResult> AddToGroup([FromQuery] string deviceId, [FromQuery] string connectionId)
         {
-            var tenantId = "tenantid"; // GetRequestTenantId();
+            var tenantId = GetRequestTenantId();
 
             if (string.IsNullOrEmpty(tenantId))
             {

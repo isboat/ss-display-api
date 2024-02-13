@@ -21,8 +21,8 @@ namespace Display.Api.Controllers
             _deviceService = deviceService;
         }
 
-        [HttpGet("name")]
-        public async Task<ActionResult> GetName()
+        [HttpGet("info")]
+        public async Task<ActionResult> GetDeviceInfo()
         {
             var tenantId = GetRequestTenantId();
             var deviceid = GetRequestDeviceId();
@@ -32,13 +32,13 @@ namespace Display.Api.Controllers
                 return BadRequest();
             }
             
-            var name = await _deviceService.GetDeviceName(deviceid);            
-            if (string.IsNullOrEmpty(name))
+            var device = await _deviceService.GetDevice(deviceid);            
+            if (device == null)
             {
                 return new NotFoundObjectResult("no_such_device");
             }
 
-            return new OkObjectResult(new { name });
+            return new OkObjectResult(device);
         }
 
         private string GetRequestTenantId()
