@@ -1,9 +1,6 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-
-namespace Display.Models
+﻿namespace Display.Models
 {
-    [BsonIgnoreExtraElements]
-    public class DetailedScreenModel // : ScreenModel
+    public class DetailedScreenModel
     {
         public string? Id { get; set; }
 
@@ -15,9 +12,15 @@ namespace Display.Models
 
         public string? MediaAssetEntityId { get; set; }
 
+        public string? TextAssetEntityId { get; set; }
+
         public LayoutModel? Layout { get; set; }
 
         public string? ExternalMediaSource { get; set; }
+
+        public string? TextEditorData { get; set; } = string.Empty; 
+        
+        public string? PlaylistId { get; set; }
 
         public MenuModel? Menu { get; set; }
         public AssetItemModel? MediaAsset { get; set; }

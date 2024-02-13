@@ -24,13 +24,18 @@ namespace Display.Api
             // Add services to the container.
             builder.Services.AddSingleton<IContentService, ContentService>();
             builder.Services.AddSingleton<IDeviceAuthenticationService, DeviceAuthenticationService>();
+            builder.Services.AddSingleton<IDeviceService, DeviceService>();
             builder.Services.AddSingleton<IDeviceRegistrationRepository, DeviceRegistrationRepository>();
             builder.Services.AddSingleton<IRepository<DetailedScreenModel>, ScreenRepository>();
             builder.Services.AddSingleton<IJwtService, JwtService>();
             builder.Services.AddSingleton<IDateTimeProvider, SystemDatetimeProvider>();
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            builder.Services
+                .AddSingleton<SignalRHostedService>()
+                .AddHostedService(sp => sp.GetService<SignalRHostedService>())
+                .AddSingleton<IHubContextStore>(sp => sp.GetService<SignalRHostedService>());
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 

@@ -1,5 +1,7 @@
 ﻿using Display.Models;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 
 namespace Display.Repositories
@@ -13,6 +15,15 @@ namespace Display.Repositories
         {
             _client = new MongoClient(
             settings.Value.ConnectionString);
+
+            BsonClassMap.RegisterClassMap<TextAssetItemModel>();
+            BsonClassMap.RegisterClassMap<AssetItemModel>();
+
+            var objectSerializer = new ObjectSerializer(
+                type => ObjectSerializer.DefaultAllowedTypes(type)
+                || type.FullName.StartsWith("Display"));
+
+            BsonSerializer.RegisterSerializer(objectSerializer);
         }
 
         private IMongoCollection<DetailedScreenModel> GetTenantScreenCollection(string tenantId)

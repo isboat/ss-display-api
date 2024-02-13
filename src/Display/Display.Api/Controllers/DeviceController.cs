@@ -1,7 +1,9 @@
-﻿using Display.Models.App;
+﻿using Display.Shared.Exceptions;
 using Display.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Net.Http.Headers;
+using Microsoft.Identity.Web.Resource;
+using Display.Shared.Constants;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -9,66 +11,46 @@ namespace Display.Api.Controllers
 {
     [Route("api/device")]
     [ApiController]
+    [Authorize(Policy = TenantAuthorization.RequiredPolicy)] 
     public class DeviceController : ControllerBase
     {
-        private readonly IDeviceAuthenticationService _deviceService;
+        private readonly IDeviceService _deviceService;
 
-        public DeviceController(IDeviceAuthenticationService deviceService)
+        public DeviceController(IDeviceService deviceService)
         {
             _deviceService = deviceService;
         }
 
-        [HttpPost("code")]
-        public async Task<IActionResult> GetDeviceCode(CodeRequest codeRequest)
+        [HttpGet("name")]
+        public async Task<ActionResult> GetName()
         {
-            if (codeRequest?.GrantType != "user_code")
-            {
-                return BadRequest("invalid_granttype");
-            }
-            var response = await _deviceService.GetDeviceCode(codeRequest);
-            if (response == null)
-            {
-                return NotFound();
-            }
+            var tenantId = GetRequestTenantId();
+            var deviceid = GetRequestDeviceId();
 
-            return new OkObjectResult(response);
-        }
-
-        [HttpPost("token")]
-        public async Task<IActionResult> Token(TokenRequest codeStatusRequest )
-        {
-            if (codeStatusRequest == null)
+            if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(deviceid))
             {
                 return BadRequest();
             }
-
-            AccessPermission? response;
-            switch(codeStatusRequest.GrantType)
+            
+            var name = await _deviceService.GetDeviceName(deviceid);            
+            if (string.IsNullOrEmpty(name))
             {
-                case "urn:ietf:params:oauth:grant-type:access_token":
-                    response = await _deviceService.GetAccessToken(codeStatusRequest);
-                    break;
-
-                case "refresh_token":
-                    var bearerExist = Request.Headers.TryGetValue(HeaderNames.Authorization, out var auth);
-                    if (!bearerExist || string.IsNullOrEmpty(auth))
-                    {
-                        return BadRequest();
-                    }
-
-                    var refreshToken = auth.ToString().Replace("Bearer ", "");
-                    response = await _deviceService.RefreshToken(codeStatusRequest, refreshToken);
-                    break;
-
-                default: return BadRequest();
+                return new NotFoundObjectResult("no_such_device");
             }
 
-            if (response == null)
-            {
-                return NotFound();
-            }
+            return new OkObjectResult(new { name });
+        }
 
-            return new OkObjectResult(response);
+        private string GetRequestTenantId()
+        {
+            var tenantClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.Equals("tenantid", StringComparison.OrdinalIgnoreCase));
+            return tenantClaim == null ? throw new InvalidTenantException() : tenantClaim.Value;
+        }
+
+        private string GetRequestDeviceId()
+        {
+            var tenantClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.Equals("deviceId", StringComparison.OrdinalIgnoreCase));
+            return tenantClaim == null ? throw new InvalidDeviceIdException() : tenantClaim.Value;
         }
     }
 }
