@@ -28,6 +28,8 @@ namespace Display.Api
             builder.Services.AddSingleton<IDeviceRegistrationRepository, DeviceRegistrationRepository>();
             builder.Services.AddSingleton<IRepository<DetailedScreenModel>, ScreenRepository>();
             builder.Services.AddSingleton<IJwtService, JwtService>();
+            builder.Services.AddSingleton<ISignalrConnectionService, SignalrConnectionService>();
+            builder.Services.AddSingleton<ISignalRRepository, SignalrConnectionRepository>();
             builder.Services.AddSingleton<IDateTimeProvider, SystemDatetimeProvider>();
 
             builder.Services.AddControllers();

@@ -1,5 +1,4 @@
-﻿using Display.Models.App;
-using Display.Models.ViewModels;
+﻿using Display.Models.ViewModels;
 
 namespace Display.Services
 {

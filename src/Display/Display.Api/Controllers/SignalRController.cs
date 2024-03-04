@@ -1,6 +1,7 @@
-﻿using Display.Shared.Constants;
+﻿using Display.Models.App;
+using Display.Services;
+using Display.Shared.Constants;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.SignalR.Management;
 
@@ -12,10 +13,12 @@ namespace Display.Api.Controllers
     public class SignalRController : CustomBaseController
     {
         private readonly ServiceHubContext _messageHubContext;
+        private readonly ISignalrConnectionService _signalrConnectionService;
 
-        public SignalRController(IHubContextStore store)
+        public SignalRController(IHubContextStore store, ISignalrConnectionService signalrConnectionService)
         {
             _messageHubContext = store.MessageHubContext;
+            _signalrConnectionService = signalrConnectionService;
         }
 
         [HttpPost("negotiate")]
@@ -39,8 +42,8 @@ namespace Display.Api.Controllers
             });
         }
 
-        [HttpPost("signalr/add-to-group")]
-        public async Task<IActionResult> AddToGroup([FromQuery] string deviceId, [FromQuery] string connectionId)
+        [HttpPost("add-connection")]
+        public async Task<IActionResult> AddConnection([FromQuery] string deviceId, [FromQuery] string deviceName, [FromQuery] string connectionId)
         {
             var tenantId = GetRequestTenantId();
 
@@ -60,6 +63,47 @@ namespace Display.Api.Controllers
             if (!await _messageHubContext.UserGroups.IsUserInGroup(userId, grp))
             {
                 await _messageHubContext.UserGroups.AddToGroupAsync(userId, grp);
+            }
+
+            await _signalrConnectionService.AddAsync(tenantId, new SignalrConnectionModel 
+            { 
+                Id = connectionId,
+                DeviceId = deviceId,
+                TenantId = tenantId,
+                DeviceName = deviceName,
+                ConnectionDateTime = DateTime.UtcNow
+            });
+
+            return NoContent();
+        }
+
+        [HttpPost("remove-connection")]
+        public async Task<IActionResult> RemoveConnection([FromQuery] string deviceId, [FromQuery] string connectionId)
+        {
+            var tenantId = GetRequestTenantId();
+
+            if (string.IsNullOrEmpty(tenantId))
+            {
+                return BadRequest();
+            }
+
+            var connectionExist = await _messageHubContext.ClientManager.ConnectionExistsAsync(connectionId);
+            if (!connectionExist)
+            {
+                return BadRequest("no_connection_exist");
+            }
+
+            var grp = SignalRExtension.ToGroupName(tenantId);
+            var userId = SignalRExtension.ToSignalRUserId(deviceId);
+            if (await _messageHubContext.UserGroups.IsUserInGroup(userId, grp))
+            {
+                await _messageHubContext.UserGroups.RemoveFromGroupAsync(userId, grp);
+                await _signalrConnectionService.RemoveAsync(tenantId, new SignalrConnectionModel
+                {
+                    Id = connectionId,
+                    DeviceId = deviceId,
+                    TenantId = tenantId
+                });
             }
 
             return NoContent();

@@ -18,12 +18,18 @@ namespace Display.Models
 
         public string? IconUrl { get; set; }
 
+        public DateTime? CreatedOn { get; set; }
+
+        public DateTime? UpdatedOn { get; set; }
+
         public IEnumerable<MenuItem>? MenuItems { get; set; }
     }
 
     public class MenuItem : IModelItem
     {
         public string? Id { get; set; }
+
+        public string? TenantId { get; set; }
 
         public string? Name { get; set; }
 
@@ -34,5 +40,9 @@ namespace Display.Models
         public string? Price { get; set; }
 
         public string? DiscountPrice { get; set; }
+
+        public DateTime? CreatedOn { get; set; }
+
+        public DateTime? UpdatedOn { get; set; }
     }
 }

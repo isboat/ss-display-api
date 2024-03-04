@@ -38,6 +38,7 @@ namespace Display.Api.Middlewares
         private Task HandleExceptionAsync(HttpContext context, Exception exception) => exception switch
         {
             AccessForbiddenException ex => HandleExpectedAsync(context, ex, StatusCodes.Status403Forbidden, "access_denied", "Forbidden"),
+            DeviceNotFoundException ex => HandleExpectedAsync(context, ex, StatusCodes.Status404NotFound, "device_not_found", "Device not found in DB"),
             InvalidDevicecodeException ex => HandleExpectedAsync(context, ex, StatusCodes.Status403Forbidden, "access_denied", "Invalid device code"),
             InvalidTenantException ex => HandleExpectedAsync(context, ex, StatusCodes.Status404NotFound, "access_denied", "Invalid Tenant"),
             AccessExpiredException ex => HandleExpectedAsync(context, ex, StatusCodes.Status400BadRequest, "access_expired", "Access Expired"),

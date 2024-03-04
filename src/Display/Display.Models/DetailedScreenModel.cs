@@ -14,6 +14,11 @@
 
         public string? TextAssetEntityId { get; set; }
 
+        public DateTime? CreatedOn { get; set; }
+        
+        public DateTime? UpdatedOn { get; set; }
+        
+
         public LayoutModel? Layout { get; set; }
 
         public string? ExternalMediaSource { get; set; }

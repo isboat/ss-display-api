@@ -62,14 +62,9 @@ namespace Display.Services
                 throw new InvalidDevicecodeException();
             }
 
-            var model = await _repository.GetAsync(codeStatusRequest.DeviceCode);
+            var model = await _repository.GetAsync(codeStatusRequest.DeviceCode) ?? throw new DeviceNotFoundException();
 
-            if (model == null)
-            {
-                throw new AccessForbiddenException();
-            }
-
-            if(IsExpired(model) && !IsApproved(model))
+            if (IsExpired(model) && !IsApproved(model))
             {
                 // rate_limit_exceeded
                 throw new AccessExpiredException();
@@ -105,7 +100,7 @@ namespace Display.Services
             var deviceCodeClaim = token.Claims.FirstOrDefault(x => x.Type.Equals("devicecode", StringComparison.OrdinalIgnoreCase));
             if (string.IsNullOrEmpty(deviceCodeClaim?.Value)) throw new InvalidRefreshTokenException();
 
-            var model = await _repository.GetAsync(deviceCodeClaim.Value) ?? throw new AccessForbiddenException();
+            var model = await _repository.GetAsync(deviceCodeClaim.Value) ?? throw new DeviceNotFoundException();
             var access = GenerateAccessPermission(model);
             return access;
         }
@@ -128,7 +123,7 @@ namespace Display.Services
 
         private AccessPermission GenerateAccessPermission(DeviceCodeRegistrationModel model)
         {
-            var tokenExpiration = _dateTimeProvider.UtcNow!.Value.AddHours(1);
+            var tokenExpiration = _dateTimeProvider.UtcNow!.Value.AddDays(3);
             var access = new AccessPermission
             {
                 TokenType = "Bearer",
