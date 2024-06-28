@@ -28,7 +28,7 @@ namespace Display.Services
                 UserCode = GenerateUserCode(),
                 ExpiresIn = 1800, // seconds
                 Interval = 5,
-                VerificationUrl = "https://www.isboatscreens.com/device/auth",
+                VerificationUrl = "https://dashboard.onscreensync.com/#/device/auth",
                 DeviceName = GenerateDeviceName(),
                 ClientId = codeRequest.ClientId,
             };
