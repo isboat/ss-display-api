@@ -27,7 +27,7 @@ namespace Display.Services
 
         public async Task<DeviceCodeModel?> GetDeviceCode(CodeRequest codeRequest)
         {
-            var model =new DeviceCodeModel
+            var model = new DeviceCodeModel
             {
                 DeviceCode = $"{Guid.NewGuid():N}/{Guid.NewGuid():N}",
                 UserCode = GenerateUserCode(),
@@ -90,10 +90,8 @@ namespace Display.Services
             {
                 _jwtService.ValidateToken(refreshToken);
             }
-            catch (Exception ex)
+            catch
             {
-                // Refresh token is expired
-                // log ex
                 throw new InvalidRefreshTokenException();
             }
 
@@ -159,7 +157,7 @@ namespace Display.Services
 
         private double? ConvertToSeconds(DateTime tokenExpiration)
         {
-            var totalSecs = tokenExpiration.Subtract(_dateTimeProvider.UnixEpoch!.Value).TotalSeconds;
+            var totalSecs = tokenExpiration.Subtract(_dateTimeProvider.UtcNow!.Value).TotalSeconds;
             return Math.Floor(totalSecs);
         }
 

@@ -17,7 +17,9 @@ Configure these sections through `appsettings`, environment variables, user secr
 ```json
 {
   "Authentication": {
-    "Disabled": false
+    "Disabled": false,
+    "DisabledTenantId": "development-tenant",
+    "DisabledDeviceId": "development-device"
   },
   "Jwt": {
     "Issuer": "https://issuer.example",
@@ -40,7 +42,7 @@ Configure these sections through `appsettings`, environment variables, user secr
 }
 ```
 
-> Do not commit production JWT signing keys, MongoDB credentials, or Azure SignalR keys.
+> Do not commit production JWT signing keys, MongoDB credentials, or Azure SignalR keys. The `DisabledTenantId` and `DisabledDeviceId` values are only used when `Authentication:Disabled` is enabled for local development.
 
 ## Run locally
 
