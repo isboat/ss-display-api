@@ -1,8 +1,11 @@
-﻿using Display.Models.App;
+﻿using Display.Models;
+using Display.Models.App;
 using Display.Shared.Exceptions;
 using Display.Repositories;
 using Display.Shared;
 using Display.Shared.Constants;
+using Microsoft.Extensions.Options;
+using System.Security.Cryptography;
 
 namespace Display.Services
 {
@@ -12,12 +15,14 @@ namespace Display.Services
         private readonly IDeviceRegistrationRepository _repository;
         private readonly IJwtService _jwtService;
         private readonly IDateTimeProvider _dateTimeProvider;
+        private readonly DeviceAuthenticationSettings _settings;
 
-        public DeviceAuthenticationService(IDeviceRegistrationRepository repository, IJwtService jwtService, IDateTimeProvider dateTimeProvider)
+        public DeviceAuthenticationService(IDeviceRegistrationRepository repository, IJwtService jwtService, IDateTimeProvider dateTimeProvider, IOptions<DeviceAuthenticationSettings> settings)
         {
             _repository = repository;
             _jwtService = jwtService;
             _dateTimeProvider = dateTimeProvider;
+            _settings = settings.Value;
         }
 
         public async Task<DeviceCodeModel?> GetDeviceCode(CodeRequest codeRequest)
@@ -26,9 +31,9 @@ namespace Display.Services
             {
                 DeviceCode = $"{Guid.NewGuid():N}/{Guid.NewGuid():N}",
                 UserCode = GenerateUserCode(),
-                ExpiresIn = 1800, // seconds
-                Interval = 5,
-                VerificationUrl = "https://dashboard.onscreensync.com/#/device/auth",
+                ExpiresIn = _settings.DeviceCodeExpiresInSeconds,
+                Interval = _settings.PollingIntervalSeconds,
+                VerificationUrl = _settings.VerificationUrl,
                 DeviceName = GenerateDeviceName(),
                 ClientId = codeRequest.ClientId,
             };
@@ -51,8 +56,7 @@ namespace Display.Services
 
         private static string GenerateDeviceName()
         {
-            var rnd = new Random();
-            return $"device-name-{rnd.Next()}";
+            return $"device-name-{RandomNumberGenerator.GetInt32(int.MaxValue)}";
         }
 
         public async Task<AccessPermission?> GetAccessToken(TokenRequest codeStatusRequest)
@@ -123,7 +127,7 @@ namespace Display.Services
 
         private AccessPermission GenerateAccessPermission(DeviceCodeRegistrationModel model)
         {
-            var tokenExpiration = _dateTimeProvider.UtcNow!.Value.AddDays(3);
+            var tokenExpiration = _dateTimeProvider.UtcNow!.Value.AddDays(_settings.AccessTokenLifetimeDays);
             var access = new AccessPermission
             {
                 TokenType = "Bearer",
@@ -148,7 +152,7 @@ namespace Display.Services
                 {"scope","refresh_token" }
             };
 
-            var refreshToken = _jwtService.GenerateToken(refreshTokenData, _dateTimeProvider.UtcNow!.Value.AddYears(1));
+            var refreshToken = _jwtService.GenerateToken(refreshTokenData, _dateTimeProvider.UtcNow!.Value.AddDays(_settings.RefreshTokenLifetimeDays));
             access.RefreshToken = refreshToken;
             return access;
         }

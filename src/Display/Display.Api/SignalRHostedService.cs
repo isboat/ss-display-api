@@ -1,4 +1,6 @@
-﻿using Microsoft.Azure.SignalR.Management;
+﻿using Display.Models;
+using Microsoft.Azure.SignalR.Management;
+using Microsoft.Extensions.Options;
 
 namespace Display.Api
 {
@@ -11,14 +13,14 @@ namespace Display.Api
 
     public class SignalRHostedService : IHostedService, IHubContextStore
     {
-        private readonly IConfiguration _configuration;
+        private readonly SignalRSettings _settings;
         private readonly ILoggerFactory _loggerFactory;
 
-        public ServiceHubContext MessageHubContext { get; private set; }
+        public ServiceHubContext MessageHubContext { get; private set; } = null!;
 
-        public SignalRHostedService(IConfiguration configuration, ILoggerFactory loggerFactory)
+        public SignalRHostedService(IOptions<SignalRSettings> settings, ILoggerFactory loggerFactory)
         {
-            _configuration = configuration;
+            _settings = settings.Value;
             _loggerFactory = loggerFactory;
         }
 
@@ -26,7 +28,7 @@ namespace Display.Api
         {
             using var serviceManager = new ServiceManagerBuilder()
                 .WithOptions(o => {
-                    o.ConnectionString = _configuration[SignalRConstants.AzureSignalRConnectionStringName];
+                    o.ConnectionString = _settings.AzureSignalRConnectionString;
                     o.ServiceTransportType = ServiceTransportType.Transient;
                 })
                 .WithLoggerFactory(_loggerFactory)
@@ -40,7 +42,7 @@ namespace Display.Api
             return Task.WhenAll(Dispose(MessageHubContext));
         }
 
-        private static Task Dispose(ServiceHubContext hubContext)
+        private static Task Dispose(ServiceHubContext? hubContext)
         {
             if (hubContext == null)
             {

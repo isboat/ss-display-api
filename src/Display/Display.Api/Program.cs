@@ -18,8 +18,31 @@ namespace Display.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.Configure<MongoSettings>(
-                builder.Configuration.GetSection("MongoSettings"));
+            builder.Services.AddOptions<MongoSettings>()
+                .Bind(builder.Configuration.GetSection("MongoSettings"))
+                .Validate(settings => !string.IsNullOrWhiteSpace(settings.ConnectionString), "MongoSettings:ConnectionString is required")
+                .ValidateOnStart();
+            builder.Services.AddOptions<JwtSettings>()
+                .Bind(builder.Configuration.GetSection(JwtSettings.SectionName))
+                .Validate(settings => !string.IsNullOrWhiteSpace(settings.Issuer), "Jwt:Issuer is required")
+                .Validate(settings => !string.IsNullOrWhiteSpace(settings.Audience), "Jwt:Audience is required")
+                .Validate(settings => !string.IsNullOrWhiteSpace(settings.SigningKey) && settings.SigningKey.Length >= 32, "Jwt:SigningKey must be at least 32 characters")
+                .ValidateOnStart();
+            builder.Services.AddOptions<DeviceAuthenticationSettings>()
+                .Bind(builder.Configuration.GetSection(DeviceAuthenticationSettings.SectionName))
+                .Validate(settings => !string.IsNullOrWhiteSpace(settings.VerificationUrl), "DeviceAuthentication:VerificationUrl is required")
+                .Validate(settings => settings.DeviceCodeExpiresInSeconds > 0, "DeviceAuthentication:DeviceCodeExpiresInSeconds must be positive")
+                .Validate(settings => settings.PollingIntervalSeconds > 0, "DeviceAuthentication:PollingIntervalSeconds must be positive")
+                .Validate(settings => settings.AccessTokenLifetimeDays > 0, "DeviceAuthentication:AccessTokenLifetimeDays must be positive")
+                .Validate(settings => settings.RefreshTokenLifetimeDays > 0, "DeviceAuthentication:RefreshTokenLifetimeDays must be positive")
+                .ValidateOnStart();
+            builder.Services.AddOptions<AuthenticationSettings>()
+                .Bind(builder.Configuration.GetSection(AuthenticationSettings.SectionName))
+                .ValidateOnStart();
+            builder.Services.AddOptions<SignalRSettings>()
+                .Bind(builder.Configuration.GetSection(SignalRSettings.SectionName))
+                .Validate(settings => !string.IsNullOrWhiteSpace(settings.AzureSignalRConnectionString), "SignalR:AzureSignalRConnectionString is required")
+                .ValidateOnStart();
 
             // Add services to the container.
             builder.Services.AddSingleton<IContentService, ContentService>();
@@ -35,8 +58,8 @@ namespace Display.Api
             builder.Services.AddControllers();
             builder.Services
                 .AddSingleton<SignalRHostedService>()
-                .AddHostedService(sp => sp.GetService<SignalRHostedService>())
-                .AddSingleton<IHubContextStore>(sp => sp.GetService<SignalRHostedService>());
+                .AddHostedService(sp => sp.GetRequiredService<SignalRHostedService>())
+                .AddSingleton<IHubContextStore>(sp => sp.GetRequiredService<SignalRHostedService>());
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -52,11 +75,13 @@ namespace Display.Api
                 app.UseSwaggerUI();
             }
 
+            app.UseMiddleware<ErrorHandlingMiddleware>();
+
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseMiddleware<ErrorHandlingMiddleware>();
             app.MapControllers();
 
             app.Run();
@@ -64,19 +89,29 @@ namespace Display.Api
 
         private static void RegisterJwtAuth(WebApplicationBuilder builder)
         {
-            var jwtIssuer = "http://mysite.com";
-            var jwtAudience = "http://myaudience.com";
-            var jwtSigningKey = "asdv234234^&%&^%&^hjsdfb2%%%";
+            var jwtSettings = builder.Configuration.GetRequiredSection(JwtSettings.SectionName).Get<JwtSettings>()
+                ?? throw new InvalidOperationException($"{JwtSettings.SectionName} configuration is required");
+            var authSettings = builder.Configuration.GetSection(AuthenticationSettings.SectionName).Get<AuthenticationSettings>() ?? new AuthenticationSettings();
 
-            var isAuthenticationDisabled = false;
+            var isAuthenticationDisabled = authSettings.Disabled;
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy(TenantAuthorization.RequiredPolicy, policy =>
+                {
+                    if (isAuthenticationDisabled)
+                    {
+                        policy.RequireAssertion(_ => true);
+                    }
+                    else
+                    {
+                        policy.RequireAuthenticatedUser().RequireClaim("scope", TenantAuthorization.RequiredScope);
+                    }
+                });
+            });
 
             if (!isAuthenticationDisabled)
             {
-                builder.Services.AddAuthorization(options =>
-                {
-                    options.AddPolicy(TenantAuthorization.RequiredPolicy, policy =>
-                        policy.RequireAuthenticatedUser().RequireClaim("scope", TenantAuthorization.RequiredScope));
-                });
                 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                         .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 
@@ -94,9 +129,9 @@ namespace Display.Api
                                 // (a lower value is better; we recommend two minutes or less)
                                 ClockSkew = TimeSpan.FromSeconds(0),
 
-                                ValidIssuer = jwtIssuer,
-                                ValidAudience = jwtAudience,
-                                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSigningKey))
+                                ValidIssuer = jwtSettings.Issuer,
+                                ValidAudience = jwtSettings.Audience,
+                                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.SigningKey!))
                             };
                         });
             }
