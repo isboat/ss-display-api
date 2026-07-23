@@ -1,4 +1,6 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Display.Models;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -8,22 +10,17 @@ namespace Display.Services
     public class JwtService : IJwtService
     {
         private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler;
-        private readonly string _jwtIssuer;
-        private readonly string _jwtAudience;
-        private readonly string _jwtSigningKey;
+        private readonly JwtSettings _jwtSettings;
 
-        public JwtService()
+        public JwtService(IOptions<JwtSettings> jwtSettings)
         {
             _jwtSecurityTokenHandler = new();
-
-            _jwtIssuer = "http://mysite.com";
-            _jwtAudience = "http://myaudience.com";
-            _jwtSigningKey = "asdv234234^&%&^%&^hjsdfb2%%%";
+            _jwtSettings = jwtSettings.Value;
         }
 
         public string GenerateToken(IDictionary<string, string> tokenData, DateTime? expiresOn)
         {
-            var mySecurityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtSigningKey));
+            var mySecurityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtSettings.SigningKey!));
 
             var claims = tokenData.Select(x => new Claim(x.Key, x.Value)).ToArray();
 
@@ -31,8 +28,8 @@ namespace Display.Services
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = expiresOn ?? DateTime.UtcNow.AddHours(1),
-                Issuer = _jwtIssuer,
-                Audience = _jwtAudience,
+                Issuer = _jwtSettings.Issuer,
+                Audience = _jwtSettings.Audience,
                 SigningCredentials = new SigningCredentials(mySecurityKey, SecurityAlgorithms.HmacSha256Signature)
             };
 
@@ -42,21 +39,21 @@ namespace Display.Services
 
         public void ValidateToken(string token)
         {
-            var claimsPrincipal = _jwtSecurityTokenHandler.ValidateToken(token,
+            _jwtSecurityTokenHandler.ValidateToken(token,
                 new TokenValidationParameters
                 {
                     RequireExpirationTime = true,
                     RequireSignedTokens = true,
                     ValidateAudience = true,
                     ValidateIssuer = true,
-                    ValidIssuer = _jwtIssuer,
-                    ValidAudience = _jwtAudience,
+                    ValidIssuer = _jwtSettings.Issuer,
+                    ValidAudience = _jwtSettings.Audience,
                     ValidateLifetime = true,
 
                     // Allow for some drift in server time
                     // (a lower value is better; we recommend two minutes or less)
                     ClockSkew = TimeSpan.FromSeconds(0),
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtSigningKey))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtSettings.SigningKey!))
                 }, out var securityToken);
 
             if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
