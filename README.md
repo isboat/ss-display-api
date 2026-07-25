@@ -53,6 +53,17 @@ dotnet run --project src/Display/Display.Api/Display.Api.csproj
 
 Swagger is enabled when the ASP.NET Core environment is `Development`.
 
+## Health check
+
+`GET /health` is an unauthenticated readiness endpoint intended for the dashboard and
+deployment monitoring. It actively checks MongoDB and Azure SignalR and returns HTTP
+`200` only when every dependency is healthy. If any dependency is unavailable, it
+returns HTTP `503`.
+
+The JSON response includes the overall status, UTC check time, total duration, and a
+separate status, description, duration, and safe error message for each dependency.
+Connection strings and other credentials are never included in the response.
+
 ## Build
 
 ```bash
