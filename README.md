@@ -61,8 +61,8 @@ deployment monitoring. It actively checks MongoDB and Azure SignalR and returns 
 returns HTTP `503`.
 
 The JSON response includes the overall status, UTC check time, total duration, and a
-separate status, description, duration, and safe error message for each dependency.
-Connection strings and other credentials are never included in the response.
+separate status, description, and duration for each dependency. Raw exceptions,
+connection strings, and other credentials are never included in the response.
 
 ## Build
 

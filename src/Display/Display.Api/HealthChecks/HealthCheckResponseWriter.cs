@@ -25,12 +25,12 @@ public static class HealthCheckResponseWriter
                 {
                     status = entry.Value.Status.ToString(),
                     description = entry.Value.Description,
-                    durationMilliseconds = entry.Value.Duration.TotalMilliseconds,
-                    data = entry.Value.Data,
-                    error = entry.Value.Exception?.Message
+                    durationMilliseconds = entry.Value.Duration.TotalMilliseconds
                 })
         };
 
-        return context.Response.WriteAsync(JsonSerializer.Serialize(response, SerializerOptions));
+        return context.Response.WriteAsync(
+            JsonSerializer.Serialize(response, SerializerOptions),
+            context.RequestAborted);
     }
 }
