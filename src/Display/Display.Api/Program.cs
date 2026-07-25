@@ -1,5 +1,6 @@
 
 using Display.Api.Middlewares;
+using Display.Api.HealthChecks;
 using Display.Models;
 using Display.Repositories;
 using Display.Services;
@@ -7,6 +8,7 @@ using Display.Shared;
 using Display.Shared.Constants;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -56,6 +58,15 @@ namespace Display.Api
             builder.Services.AddSingleton<IDateTimeProvider, SystemDatetimeProvider>();
 
             builder.Services.AddControllers();
+            builder.Services.AddHealthChecks()
+                .AddCheck<MongoHealthCheck>(
+                    "mongodb",
+                    tags: new[] { "dependency", "database" },
+                    timeout: TimeSpan.FromSeconds(10))
+                .AddCheck<AzureSignalRHealthCheck>(
+                    "azure-signalr",
+                    tags: new[] { "dependency", "messaging" },
+                    timeout: TimeSpan.FromSeconds(10));
             builder.Services
                 .AddSingleton<SignalRHostedService>()
                 .AddHostedService(sp => sp.GetRequiredService<SignalRHostedService>())
@@ -83,6 +94,10 @@ namespace Display.Api
             app.UseAuthorization();
 
             app.MapControllers();
+            app.MapHealthChecks("/health", new HealthCheckOptions
+            {
+                ResponseWriter = HealthCheckResponseWriter.WriteAsync
+            });
 
             app.Run();
         }
