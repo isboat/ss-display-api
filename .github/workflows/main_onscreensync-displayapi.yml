@@ -11,7 +11,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    permissions:
+      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
@@ -22,45 +24,36 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build src/Display/Display.sln --configuration Release
+        run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: >-
-          dotnet publish src/Display/Display.Api/Display.Api.csproj
-          --configuration Release
-          --no-build
-          --output "${{ runner.temp }}/publish"
+        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: ${{ runner.temp }}/publish
-          if-no-files-found: error
+          path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      contents: read
-      id-token: write
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: .net-app
-          path: ${{ runner.temp }}/publish
-
+      
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_AC8CA5D7062048CF93453FCABF167A6D }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9E08F9223C3F47258A5CBE3A99EBD108 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5A1A9E82E8714474B38D588184839122 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_B22F92953E374A2293E676C641C05693 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1F184229A2D14D2E8F91CF5D940EEE0A }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_6EE8BE01B6BE4BBEA51564DC8FEB0DE9 }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -68,5 +61,5 @@ jobs:
         with:
           app-name: 'onscreensync-displayapi'
           slot-name: 'Production'
-          package: ${{ runner.temp }}/publish
-
+          package: .
+          
